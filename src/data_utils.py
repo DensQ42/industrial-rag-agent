@@ -289,3 +289,45 @@ def semantic_search(query: str,
     )
 
     return results
+
+
+def print_search_results(results: Dict[str, Any], query: str) -> None:
+    """
+    Display search results in a formatted, human-readable format.
+
+    This function prints semantic search results with metadata including similarity
+    scores, page numbers, chunk IDs, and text previews. Results are displayed in
+    ranked order with clear visual separation.
+
+    Args:
+        results (Dict[str, Any]): Search results dictionary from ChromaDB query
+            containing the following keys:
+            - ids (List[List[str]]): Document IDs for each result.
+            - documents (List[List[str]]): Full text content of matched documents.
+            - metadatas (List[List[Dict]]): Metadata dictionaries with 'page_num' key.
+            - distances (List[List[float]]): Distance values (lower = more similar).
+        query (str): The original search query text to display.
+
+    Returns:
+        None: This function prints directly to stdout and returns nothing.
+
+    Note:
+        - Similarity is calculated as (1 - distance) for intuitive interpretation.
+        - Text previews are truncated to the first 300 characters.
+        - The function expects ChromaDB result format with nested lists.
+        - A horizontal line of 100 dashes separates the query from results.
+    """
+    print('Query:', query)
+    print('-' * 100)
+
+    for idx, (doc_id, doc, metadata, distance) in enumerate(zip(
+        results['ids'][0],
+        results['documents'][0],
+        results['metadatas'][0],
+        results['distances'][0]
+    ), 1):
+        similarity = 1 - distance
+
+        print(f'Rank {idx} | Similarity: {similarity:.3f} | Page: {metadata["page_num"]}', end='')
+        print(f' | Chunk ID: {doc_id} | Text preview below (first 300 chars):')
+        print(f'{doc[:300]}...', end='\n\n')

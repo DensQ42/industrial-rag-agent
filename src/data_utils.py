@@ -6,6 +6,9 @@ import pymupdf
 from typing import Union
 from IPython.display import display
 import re
+from typing import Any, Dict
+from sentence_transformers import SentenceTransformer
+from chromadb.api.models.Collection import Collection
 
 
 def download_file(url: str, name: str, mode: str = 'wb', overwrite: bool = False) -> None:
@@ -243,3 +246,46 @@ def create_chunks(pages_data: pd.DataFrame,
                 chunk_id += 1
 
     return pd.DataFrame(chunks)
+
+
+def semantic_search(query: str,
+                    model: SentenceTransformer,
+                    collection: Collection,
+                    n_results: int = 5) -> Dict[str, Any]:
+    """
+    Search for semantically similar text chunks using vector embeddings.
+
+    This function encodes the input query using a sentence transformer model,
+    performs a similarity search in a ChromaDB collection, and returns the most
+    relevant chunks along with their metadata and similarity scores.
+
+    Args:
+        query (str): The search query text to find similar chunks for.
+        model (SentenceTransformer): A sentence-transformers model instance used
+            to encode the query into vector embeddings.
+        collection (Collection): A ChromaDB collection object containing the
+            indexed document chunks with their embeddings.
+        n_results (int, optional): Maximum number of similar results to return.
+            Defaults to 5.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing search results with the following keys:
+            - documents (List[List[str]]): Retrieved document texts (nested list).
+            - embeddings (List[List[float]]): Vector embeddings of retrieved documents.
+            - metadatas (List[List[Dict]]): Metadata associated with each document.
+            - distances (List[List[float]]): Similarity distances (lower = more similar).
+
+    Note:
+        - The query is automatically converted to a list format required by ChromaDB.
+        - Distance values depend on the embedding model's similarity metric.
+        - Results are ordered by similarity (most similar first).
+    """
+    query_embedding = model.encode(query).tolist()
+
+    results = collection.query(
+        query_embeddings=[query_embedding],
+        n_results=n_results,
+        include=['documents', 'embeddings', 'metadatas', 'distances']
+    )
+
+    return results

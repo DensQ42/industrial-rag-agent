@@ -214,6 +214,8 @@ def create_chunks(pages_data: pd.DataFrame,
                 'end_char': len(text),
             })
 
+            chunk_id += 1
+
         else:
             start = 0
             while start < len(text):
@@ -238,6 +240,6 @@ def create_chunks(pages_data: pd.DataFrame,
 
                 start = end - overlap
 
-        chunk_id += 1
+                chunk_id += 1
 
     return pd.DataFrame(chunks)

@@ -7,13 +7,14 @@
 
 .vscode/
 
-data/processed/*
+data/processed/**
 !data/processed/.gitkeep
 
-data/raw/*
+data/raw/**
 !data/raw/.gitkeep
 
-data/chromadb/
+data/chromadb/**
+!data/chromadb/.gitkeep
 
 **/mlruns/
 **/mlartifacts/

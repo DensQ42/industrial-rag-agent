@@ -384,6 +384,8 @@ INSTRUCTIONS:
 4. Do NOT use your general knowledge and do not make assumptions
 5. Cite page numbers for each piece of information
 6. Explicitly state if the answer is not in the provided context
+7. Write in PLAIN TEXT without any formatting (no bold, no italics, no markdown syntax like ** or __)
+8. You may use line breaks and simple numbering/bullet points for clarity
 
 CONTEXT CHUNKS FROM DOCUMENTATION:
 {context_block}
@@ -391,7 +393,7 @@ CONTEXT CHUNKS FROM DOCUMENTATION:
 USER QUESTION:
 {query}
 
-Think step-by-step, then provide your final answer.
+Think step-by-step, then provide your final ANSWER only without steps.
 
 ANSWER:"""
 

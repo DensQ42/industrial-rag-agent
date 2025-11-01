@@ -65,7 +65,7 @@ def download_file(url: str, name: str, mode: str = 'wb', overwrite: bool = False
         print(f'File has been downloaded to {file_path}')
 
 
-def extract_text_from_pdf(doc:pymupdf.Document) -> pd.DataFrame:
+def _extract_text_from_pdf(doc:pymupdf.Document) -> pd.DataFrame:
     """
     Extract text content from a PDF document and return structured data.
 
@@ -142,7 +142,7 @@ def load_and_analyze_pdf(path: Union[str, Path]) -> pd.DataFrame:
     """
     doc = pymupdf.open(path)
 
-    df = extract_text_from_pdf(doc)
+    df = _extract_text_from_pdf(doc)
 
     print(f'Filename: {Path(path).name}')
     print(f"Title: {doc.metadata.get('title', 'N/A')}")

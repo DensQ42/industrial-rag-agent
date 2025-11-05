@@ -163,13 +163,6 @@ def setup_data_collection(
         Chroma:
             A Chroma vector store object ready for similarity search or RAG pipelines.
 
-    Raises:
-        FileNotFoundError:
-            If `overwrite=True` and the specified JSON file does not exist.
-        ValueError:
-            If the JSON file structure does not contain required columns (`text`,
-            `chunk_id`, `page_num`, `char_count`, `start_char`, `end_char`).
-
     Notes:
         - Embeddings are computed using the `'sentence-transformers/all-MiniLM-L6-v2'` model.
         - The Chroma database is stored persistently at `'../data/chromadb'`.
@@ -220,3 +213,110 @@ def setup_data_collection(
         )
 
     return vectorstore
+
+
+def langchain_rag_pipeline(
+    query: str,
+    vectorstore: Chroma,
+    k: int = 5,
+    temperature: float = 0.3,
+    llm_name: str = 'claude-haiku-4-5-20251001',
+) -> str:
+    """
+    Run a simple LangChain RAG pipeline using a Chroma vectorstore and an Anthropic LLM.
+
+    The pipeline:
+    1. Retrieves top-k relevant document chunks from the provided vectorstore.
+    2. Formats retrieved documents into a single context string using an existing
+       `format_retrieved_docs` callable (expected to be available in scope).
+    3. Builds a task-specific prompt enforcing that the model answers **only**
+       from the supplied context and cites page numbers.
+    4. Invokes the Anthropic LLM and returns the plain-text answer.
+
+    Args:
+        query (str):
+            User question to answer using Retrieval-Augmented Generation (RAG).
+        vectorstore (Chroma | Any):
+            A Chroma vectorstore instance (or any object exposing `.as_retriever(...)`)
+            that returns documents compatible with `format_retrieved_docs`.
+        k (int, optional):
+            Number of nearest neighbours to retrieve. Defaults to 5.
+        temperature (float, optional):
+            LLM temperature (creativity). Defaults to 0.3.
+        llm_name (str, optional):
+            Anthropic model identifier to use. Defaults to
+            `'claude-haiku-4-5-20251001'`.
+
+    Returns:
+        str:
+            Final answer produced by the LLM as plain text.
+
+    Raises:
+        EnvironmentError:
+            If the Anthropic API key is not found in the environment when the LLM is invoked.
+        AttributeError:
+            If `vectorstore` does not expose `.as_retriever(...)` or the retriever's output
+            is incompatible with `format_retrieved_docs`.
+        ValueError:
+            If `k` is not a positive integer.'
+
+    Notes:
+        - This function assumes a callable named `format_retrieved_docs` exists in the
+          current scope and accepts an iterable/list of Documents, returning a string.
+        - The prompt forces the model to (a) use only provided context, (b) cite page numbers,
+          and (c) return plain text without markdown/formatting.
+        - The Anthropic API key is read from the environment variable `ANTHROPIC_API_KEY`.
+    """
+    if not isinstance(k, int) or k <= 0:
+        raise ValueError('k must be a positive integer.')
+
+    prompt_template = """You are an expert at answering questions about Amazon Web Services documentation.
+
+INSTRUCTIONS:
+1. Read all context chunks from documentation carefully
+2. Identify which chunks contain relevant information
+3. Synthesize a clear answer using ONLY the provided context
+4. Do NOT use your general knowledge and do not make assumptions
+5. Cite page numbers for each piece of information
+6. Explicitly state if the answer is not in the provided context
+7. Write in PLAIN TEXT without any formatting (no bold, no italics, no markdown syntax like ** or __)
+8. You may use line breaks and simple numbering/bullet points for clarity
+
+CONTEXT CHUNKS FROM DOCUMENTATION:
+{context}
+
+USER QUESTION:
+{query}
+
+Think step-by-step, then provide your final ANSWER only without steps.
+
+ANSWER:"""
+
+    prompt = PromptTemplate(template=prompt_template, input_variables=['context', 'query'])
+
+    load_dotenv()
+    api_key = os.getenv('ANTHROPIC_API_KEY')
+    if not api_key:
+        raise EnvironmentError('ANTHROPIC_API_KEY not found in environment.')
+
+    llm = ChatAnthropic(
+        model=llm_name,
+        temperature=temperature,
+        max_tokens=500,
+        anthropic_api_key=api_key,
+    )
+
+    retriever = vectorstore.as_retriever(search_type='similarity', search_kwargs={'k': k})
+
+    retriever_step = RunnableParallel(
+        {
+            'context': retriever | format_retrieved_docs,
+            'query': RunnablePassthrough(),
+        }
+    )
+
+    chain = (retriever_step | prompt | llm | StrOutputParser())
+
+    result = chain.invoke(query)
+
+    return result

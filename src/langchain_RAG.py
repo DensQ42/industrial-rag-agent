@@ -127,3 +127,96 @@ def create_chunks(pages_data: pd.DataFrame,
                 chunk_id += 1
 
     return pd.DataFrame(chunks)
+
+
+
+def setup_data_collection(
+    chunks_filename: str = 'chunks',
+    collection_name: str = 'aws_docs_langchain',
+    overwrite: bool = False,
+    device: str = 'cpu',
+) -> Chroma:
+    """
+    Prepare and load a Chroma vector database with document embeddings using LangChain and Hugging Face.
+
+    This function either creates a new Chroma collection from preprocessed text chunks
+    or loads an existing collection if `overwrite` is set to False. When creating a new
+    collection, it reads text chunks from a JSON file, converts them into LangChain
+    `Document` objects, and computes embeddings using the Hugging Face
+    `all-MiniLM-L6-v2` model.
+
+    Args:
+        chunks_filename (str, optional):
+            Base filename (without extension) for the JSON file containing text chunks.
+            The file is expected at `../data/processed/{chunks_filename}.json`.
+            Defaults to `'chunks'`.
+        collection_name (str, optional):
+            Name of the Chroma collection to create or load. Defaults to `'aws_docs_langchain'`.
+        overwrite (bool, optional):
+            If True, deletes any existing collection with the same name and rebuilds it
+            from the JSON file. If False, loads an existing persistent collection.
+            Defaults to False.
+        device (str, optional):
+            Device for embedding computation (`'cpu'` or `'cuda'`). Defaults to `'cpu'`.
+
+    Returns:
+        Chroma:
+            A Chroma vector store object ready for similarity search or RAG pipelines.
+
+    Raises:
+        FileNotFoundError:
+            If `overwrite=True` and the specified JSON file does not exist.
+        ValueError:
+            If the JSON file structure does not contain required columns (`text`,
+            `chunk_id`, `page_num`, `char_count`, `start_char`, `end_char`).
+
+    Notes:
+        - Embeddings are computed using the `'sentence-transformers/all-MiniLM-L6-v2'` model.
+        - The Chroma database is stored persistently at `'../data/chromadb'`.
+        - The vector space uses cosine similarity for nearest-neighbor search.
+    """
+    embedding_function = HuggingFaceEmbeddings(
+        model_name='sentence-transformers/all-MiniLM-L6-v2',
+        model_kwargs={'device': device},
+        encode_kwargs={'normalize_embeddings': True, 'batch_size': 32},
+    )
+
+    if overwrite:
+        chunks = pd.read_json(f'../data/processed/{chunks_filename}.json', orient='records')
+
+        documents: List[Document] = [
+            Document(
+                page_content=row['text'],
+                metadata={
+                    'chunk_id': int(row['chunk_id']),
+                    'page_num': int(row['page_num']),
+                    'char_count': int(row['char_count']),
+                    'start_char': int(row['start_char']),
+                    'end_char': int(row['end_char']),
+                },
+            )
+            for _, row in chunks.iterrows()
+        ]
+
+        try:
+            client = chromadb.PersistentClient(path='../data/chromadb')
+            client.delete_collection(collection_name)
+        except Exception:
+            pass
+
+        vectorstore = Chroma.from_documents(
+            documents=documents,
+            embedding=embedding_function,
+            collection_name=collection_name,
+            persist_directory='../data/chromadb',
+            collection_metadata={'hnsw:space': 'cosine'},
+        )
+
+    else:
+        vectorstore = Chroma(
+            collection_name=collection_name,
+            embedding_function=embedding_function,
+            persist_directory='../data/chromadb',
+        )
+
+    return vectorstore

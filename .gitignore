@@ -11,8 +11,8 @@ data/raw/**
 !data/raw/.gitkeep
 
 data/processed/**
-!data/raw/chunks.json
-!data/raw/final_chunks.json
+!data/processed/chunks.json
+!data/processed/final_chunks.json
 
 data/chromadb/**
 !data/chromadb/.gitkeep

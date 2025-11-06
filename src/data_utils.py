@@ -160,7 +160,8 @@ def load_and_analyze_pdf(path: Union[str, Path]) -> pd.DataFrame:
 
 def create_chunks(pages_data: pd.DataFrame,
                   chunk_size: int,
-                  overlap: int) -> pd.DataFrame:
+                  overlap: int,
+                  EOS:int = 100) -> pd.DataFrame:
     """
     Split page texts into overlapping chunks with intelligent sentence boundary detection.
 
@@ -177,6 +178,10 @@ def create_chunks(pages_data: pd.DataFrame,
             slightly smaller if sentence boundary splitting is applied.
         overlap (int): Number of characters to overlap between consecutive chunks.
             Must be less than chunk_size.
+        EOS (int, optional): Number of characters from the end of each chunk
+            to search backward for a sentence boundary (a period followed by a space).
+            This helps ensure that chunks end at natural sentence boundaries, improving
+            text coherence in RAG contexts. Default is 100.
 
     Returns:
         pd.DataFrame: DataFrame containing text chunks with the following columns:
@@ -223,7 +228,7 @@ def create_chunks(pages_data: pd.DataFrame,
                 chunk_text = text[start:end]
 
                 if end < len(text):
-                    last_period = chunk_text.rfind('. ', -100)
+                    last_period = chunk_text.rfind('. ', -EOS)
 
                     if last_period != -1:
                         end = start + last_period + 2
@@ -243,3 +248,4 @@ def create_chunks(pages_data: pd.DataFrame,
                 chunk_id += 1
 
     return pd.DataFrame(chunks)
+

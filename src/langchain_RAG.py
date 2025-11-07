@@ -1,6 +1,5 @@
 import pandas as pd
-import re, os
-from tqdm.auto import tqdm
+import os
 import chromadb
 from langchain_chroma import Chroma
 from dotenv import load_dotenv

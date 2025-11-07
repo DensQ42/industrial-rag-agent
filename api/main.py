@@ -16,3 +16,8 @@ logging.getLogger('sentence_transformers').setLevel(logging.WARNING)
 sys.path.append('..')
 from src.data_utils import download_file, load_and_analyze_pdf, create_chunks
 from src.langchain_RAG import setup_data_collection, langchain_rag_pipeline
+
+
+logging.basicConfig(level=logging.INFO)
+api_logger = logging.getLogger('rag_api')
+

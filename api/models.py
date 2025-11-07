@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 
+
 class HealthResponse(BaseModel):
     """
     Response model for health check endpoint.
@@ -22,3 +23,31 @@ class HealthResponse(BaseModel):
     status: str = Field(..., description='Service status (healthy/unhealthy)')
     timestamp: str = Field(..., description='Health check timestamp (ISO format)')
     vectorstore_loaded: bool = Field(..., description='Whether vector database is loaded')
+
+
+class QueryRequest(BaseModel):
+    """
+    Request model for RAG query endpoint.
+
+    This Pydantic model defines the structure and validation rules for incoming
+    query requests to the RAG (Retrieval-Augmented Generation) system. It ensures
+    that user questions meet minimum quality standards before processing.
+
+    Attributes:
+        question (str): The user's question about AWS documentation. Must be between
+            5 and 500 characters in length to ensure meaningful queries while preventing
+            abuse or overly complex questions.
+
+    Note:
+        - Questions shorter than 5 characters will raise a validation error.
+        - Questions longer than 500 characters will be rejected.
+        - This model is typically used with POST /query endpoint.
+        - Field is required (indicated by ellipsis `...`).
+    """
+    question: str = Field(
+        ...,
+        description='User question about AWS documentation',
+        min_length=5,
+        max_length=500,
+        examples=['How do I create an AWS account?'],
+    )

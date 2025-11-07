@@ -16,6 +16,7 @@ logging.getLogger('sentence_transformers').setLevel(logging.WARNING)
 sys.path.append('..')
 from src.data_utils import download_file, load_and_analyze_pdf, create_chunks
 from src.langchain_RAG import setup_data_collection, langchain_rag_pipeline
+from models import QueryRequest, QueryResponse, HealthResponse
 
 
 logging.basicConfig(level=logging.INFO)
@@ -97,4 +98,63 @@ app.add_middleware(
     allow_methods=['GET', 'POST'],
     allow_headers=['*'],
 )
+
+
+@app.get('/health', response_model=HealthResponse)
+async def health_check():
+    """
+    Check the health status of the RAG API service.
+
+    This endpoint provides real-time information about the service health,
+    including the availability of the vector database. It's designed for
+    monitoring, load balancing, and automated health checks by orchestration
+    systems like Kubernetes or Docker Swarm.
+
+    The health status is determined as follows:
+    - 'healthy': Vector database is loaded and available
+    - 'degraded': Service is running but vector database is not available
+    - 'unhealthy': An unexpected error occurred during the health check
+
+    Returns:
+        HealthResponse: A Pydantic model containing:
+            - status (str): Overall service health ('healthy', 'degraded', or 'unhealthy')
+            - timestamp (str): ISO 8601 formatted timestamp of the health check
+            - vectorstore_loaded (bool): Whether the vector database is initialized
+
+    Raises:
+        None: All exceptions are caught and returned as 'unhealthy' status rather
+            than propagating errors to the caller.
+
+    Note:
+        - This endpoint always returns HTTP 200, even when unhealthy.
+        - The endpoint is lightweight and suitable for frequent polling.
+        - Errors during health checks are logged but don't crash the endpoint.
+        - This follows the health check pattern recommended for microservices.
+        - No authentication is required for this endpoint.
+
+    See Also:
+        HealthResponse: The response model definition.
+    """
+    try:
+        vectorstore_loaded = vectorstore is not None
+
+        if vectorstore_loaded:
+            overall_status = 'healthy'
+        else:
+            overall_status = 'degraded'
+
+        return HealthResponse(
+            status=overall_status,
+            timestamp=datetime.now().isoformat(),
+            vectorstore_loaded=vectorstore_loaded,
+        )
+
+    except Exception as e:
+        api_logger.error(f'Health check failed: {str(e)}')
+        return HealthResponse(
+            status='unhealthy',
+            timestamp=datetime.now().isoformat(),
+            vectorstore_loaded=False,
+        )
+
 

@@ -218,3 +218,47 @@ async def query_rag(q: QueryRequest):
     except Exception as e:
         api_logger.error(f'Unexpected error: {str(e)}')
         raise HTTPException(status_code=500, detail=f'Failed: {str(e)}')
+
+
+@app.get('/')
+async def root():
+    """
+    Provide API overview and information about available endpoints.
+
+    This root endpoint serves as the entry point for the API, returning a JSON
+    response with metadata about the service, available endpoints, and links to
+    documentation. It's useful for API discovery and initial orientation.
+
+    Returns:
+        dict: A dictionary containing API metadata with the following keys:
+            - message (str): Service name and greeting
+            - version (str): Current API version following semantic versioning
+            - documentation (str): Relative path to interactive API documentation (Swagger UI)
+            - health (str): Relative path to health check endpoint
+            - input_format (str): Expected input format for queries
+            - endpoints (dict): Dictionary mapping endpoint names to their descriptions
+
+    Note:
+        - This endpoint requires no authentication.
+        - Response is static and can be cached.
+        - Useful for monitoring and service discovery.
+        - Documentation link points to auto-generated Swagger UI.
+        - Version should be updated when API changes are deployed.
+
+    See Also:
+        /docs: Interactive API documentation (Swagger UI).
+        /health: Health check endpoint.
+        /query: Main RAG query endpoint.
+    """
+    r = {
+        'message': 'RAG API Server',
+        'version': '1.0.0',
+        'documentation': '/docs',
+        'health': '/health',
+        'input_format': 'String Query',
+        'endpoints': {
+            'query': 'POST /query - Generate answers using RAG pipeline',
+            'health': 'GET /health - Service health check',
+        }
+    }
+    return r

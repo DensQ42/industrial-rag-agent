@@ -78,3 +78,23 @@ async def lifespan(_app: FastAPI):
 
 
 vectorstore = None
+
+
+app = FastAPI(
+    title='Industrial RAG Agent API',
+    description='RAG',
+    version='1.0.0',
+    docs_url='/docs',
+    redoc_url='/redoc',
+    lifespan=lifespan,
+)
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],  # in production this must be specified
+    allow_credentials=True,
+    allow_methods=['GET', 'POST'],
+    allow_headers=['*'],
+)
+

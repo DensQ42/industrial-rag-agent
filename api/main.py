@@ -1,6 +1,7 @@
 from pathlib import Path
 from datetime import datetime
-import uvicorn, nest_asyncio, sys, torch
+# import nest_asyncio
+import uvicorn, sys, torch
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -314,5 +315,5 @@ def run_api_server(app: FastAPI,
 
 
 if __name__ == "__main__":
-    nest_asyncio.apply()
+    # nest_asyncio.apply()
     run_api_server(app)

@@ -51,3 +51,30 @@ class QueryRequest(BaseModel):
         max_length=500,
         examples=['How do I create an AWS account?'],
     )
+
+
+class QueryResponse(BaseModel):
+    """
+    Response model for RAG query endpoint.
+
+    This Pydantic model defines the structure of the response returned by the RAG
+    (Retrieval-Augmented Generation) system after processing a user's question.
+    It includes the generated answer along with metadata for tracking and auditing.
+
+    Attributes:
+        timestamp (str): ISO 8601 formatted timestamp indicating when the response
+            was generated.
+        question (str): The original user question that was submitted, echoed back
+            for reference and logging purposes.
+        answer (str): The generated answer produced by the RAG pipeline, synthesized
+            from retrieved documentation chunks and language model processing.
+
+    Note:
+        - All fields are required (indicated by ellipsis `...` in Field).
+        - Timestamp follows ISO 8601 format (YYYY-MM-DDTHH:MM:SS.mmmmmm).
+        - This model is typically returned by POST /query endpoint.
+        - The answer field length is not restricted as responses can vary significantly.
+    """
+    timestamp: str = Field(..., description='Response timestamp (ISO format)')
+    question: str = Field(..., description='Original user question')
+    answer: str = Field(..., description='Generated answer from RAG pipeline')

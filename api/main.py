@@ -158,3 +158,63 @@ async def health_check():
         )
 
 
+@app.post('/query', response_model=QueryResponse)
+async def query_rag(q: QueryRequest):
+    """
+    Process a user question through the RAG pipeline and return a generated answer.
+
+    This endpoint receives a user's question about AWS documentation, retrieves
+    relevant context from the vector database using semantic search, and generates
+    a comprehensive answer using a language model. The entire RAG (Retrieval-Augmented
+    Generation) pipeline is executed, including context retrieval, prompt construction,
+    and answer generation.
+
+    Args:
+        q (QueryRequest): A Pydantic model containing the user's question with
+            validation for length and format.
+
+    Returns:
+        QueryResponse: A Pydantic model containing:
+            - timestamp (str): ISO 8601 formatted timestamp when the response was generated
+            - question (str): The original user question echoed back
+            - answer (str): The generated answer from the RAG pipeline
+
+    Raises:
+        HTTPException (400): If the query request validation fails (handled by FastAPI/Pydantic).
+        HTTPException (500): If an unexpected error occurs during RAG pipeline execution.
+        HTTPException: Any HTTP exceptions from the RAG pipeline are re-raised as-is.
+
+    Note:
+        - Processing time is logged for monitoring and performance analysis.
+        - The vectorstore must be initialized (checked in lifespan) for this endpoint to work.
+        - All errors are logged before raising HTTP exceptions.
+        - The endpoint is async but calls synchronous RAG pipeline internally.
+        - Response time varies based on query complexity and retrieved context size.
+
+    See Also:
+        QueryRequest: The request model definition.
+        QueryResponse: The response model definition.
+        langchain_rag_pipeline: The core RAG processing function.
+    """
+    start_time = datetime.now()
+
+    try:
+        result = langchain_rag_pipeline(q.question, vectorstore)
+
+        response = QueryResponse(
+            timestamp=datetime.now().isoformat(),
+            question=q.question,
+            answer=result['answer'],
+        )
+
+        processing_time = (datetime.now() - start_time).total_seconds() * 1000
+
+        api_logger.info(f'Completed successfully in {processing_time:.2f}ms')
+        return response
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        api_logger.error(f'Unexpected error: {str(e)}')
+        raise HTTPException(status_code=500, detail=f'Failed: {str(e)}')

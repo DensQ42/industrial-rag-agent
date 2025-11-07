@@ -262,3 +262,58 @@ async def root():
         }
     }
     return r
+
+
+def run_api_server(app: FastAPI,
+                   host: str = '127.0.0.1',
+                   port: int = 8000,
+                   reload: bool = False) -> None:
+    """
+    Start the RAG API server using Uvicorn ASGI server.
+
+    This function launches the FastAPI application with Uvicorn, providing a
+    production-ready ASGI server for handling HTTP requests. It supports
+    configuration of host, port, and auto-reload for development purposes.
+
+    Args:
+        app (FastAPI): The FastAPI application instance to run. Should be
+            fully configured with routes, middleware, and lifespan handlers.
+        host (str, optional): The host address to bind the server to.
+            Use '0.0.0.0' to accept connections from any network interface,
+            or '127.0.0.1' for localhost only. Defaults to '127.0.0.1'.
+        port (int, optional): The port number to listen on. Must be between
+            1024-65535 for non-privileged users. Defaults to 8000.
+        reload (bool, optional): Enable auto-reload on code changes. Should
+            only be True in development environments. Defaults to False.
+
+    Returns:
+        None: This function runs indefinitely until interrupted (Ctrl+C) or
+            the process is terminated.
+
+    Note:
+        - The server prints a startup message before launching.
+        - Log level is set to 'info' for standard logging output.
+        - Auto-reload watches for file changes and restarts the server automatically.
+        - For production deployments, use reload=False and consider process managers
+          like systemd or supervisord.
+        - The function blocks until the server is shut down.
+        - Uvicorn handles graceful shutdown on SIGTERM/SIGINT signals.
+
+    See Also:
+        uvicorn.run: The underlying ASGI server function.
+        FastAPI: The web framework being served.
+    """
+    print(f'Starting RAG API server...')
+
+    uvicorn.run(
+        app=app,
+        host=host,
+        port=port,
+        reload=reload,
+        log_level='info',
+    )
+
+
+if __name__ == "__main__":
+    nest_asyncio.apply()
+    run_api_server(app)

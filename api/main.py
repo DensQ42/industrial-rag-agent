@@ -14,7 +14,6 @@ logging.getLogger('chromadb').setLevel(logging.WARNING)
 logging.getLogger('sentence_transformers').setLevel(logging.WARNING)
 
 sys.path.append('..')
-from src.data_utils import download_file, load_and_analyze_pdf, create_chunks
 from src.langchain_RAG import setup_data_collection, langchain_rag_pipeline
 from models import QueryRequest, QueryResponse, HealthResponse
 

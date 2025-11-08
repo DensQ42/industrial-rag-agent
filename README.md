@@ -1,5 +1,5 @@
 # Industrial RAG Agent
-This project implements a production-ready Retrieval-Augmented Generation (RAG) system designed for querying technical documentation. In the beginning the core mechanics were built from scratch, then refactored using LangChain.
+This project implements a production-ready Retrieval-Augmented Generation (RAG) system designed for querying technical documentation. Initially, the core mechanics were built from scratch, then refactored using LangChain.
 
 This project demonstrates end-to-end ML engineering: from data processing and chunking strategies to quantitative evaluation with RAGAS and REST API deployment with Docker.
 
@@ -21,7 +21,7 @@ This project demonstrates end-to-end ML engineering: from data processing and ch
 - Docker-ready containerized deployment
 
 ## Dataset Description
-This projects uses [AWS Toolkit for Microsoft Azure DevOps - User Guide](https://docs.aws.amazon.com/pdfs/vsts/latest/userguide/vsts-ug.pdf) (100+ pages) as an example of real technical documentation with complex structure.
+This project uses [AWS Toolkit for Microsoft Azure DevOps - User Guide](https://docs.aws.amazon.com/pdfs/vsts/latest/userguide/vsts-ug.pdf) (100+ pages) as an example of real technical documentation with complex structure.
 
 ## Project Structure
 The project uses custom utility module to keep clean notebook structure.
@@ -34,7 +34,7 @@ INDUSTRIAL_RAG_AGENT/
 │   ├── chromadb/                    # Vector Database Chroma
 │   ├── processed/                   # Processed files (not all of them in repository)
 │   │   ├── chunks.json
-│   │   └── final_chunks.py
+│   │   └── final_chunks.json
 │   └── raw/                         # Original PDF documents (not in repository)
 ├── notebooks/                       # Jupyter notebooks for analysis and development
 │   ├── 01_data_preprocessing.ipynb
@@ -47,7 +47,7 @@ INDUSTRIAL_RAG_AGENT/
 │   ├── langchain_RAG.py
 │   └── manual_RAG.py
 ├── .dockerignore
-├── .env.example                     # Environment variables template (Antropic Console API key)
+├── .env.example                     # Environment variables template (Anthropic Console API key)
 ├── docker-compose.yml
 ├── Dockerfile
 ├── requirements-docker.txt          # Production dependencies
@@ -59,13 +59,13 @@ INDUSTRIAL_RAG_AGENT/
 ### 1. Data Processing Pipeline (notebook 1)
 - Used PyMuPDF for text extraction from PDF document with metadata preservation
 - Split the extracted text into overlapping sentence-boundary-aware chunks
-- Established semantic vector representation using sentence transformer `all-MiniLM-L6-v2` model
+- Generated semantic vector representation using sentence transformer `all-MiniLM-L6-v2` model
 - Built vector database store with cosine similarity indexing using ChromaDB
 
 ### 2. RAG Architecture: Manual Implementation (Notebook 2)
 - Create custom semantic search function using cosine similarity
-- Engineered prompt template with clear structured instruction of 8 steps
-- Integrated directly Anthropic Claude Haiku 4.5 model with temperature 0.3 via API for answer generating
+- Engineered a prompt template with clearly structured 8-step instructions
+- Directly integrated Anthropic Claude Haiku 4.5 model with temperature 0.3 via API for answer generation
 
 ### 3. RAG Architecture: LangChain Implementation (Notebook 3)
 Implemented production-ready RAG pipeline using LangChain Expression Language (LCEL) chains with 3 main elements: modular retriever, prompt template and LLM (Haiku 4.5).
@@ -91,9 +91,9 @@ Implemented production-ready RAG pipeline using LangChain Expression Language (L
 
 ### Key Findings
 - Larger chunks consistently outperform smaller chunks across all metrics
-- Faithfulness remains high (>0.94) across all configurations, that confirms well designed hallucinating-prevent prompt instruction
-- Answer relevancy shows most variance with the largest difference of 0.248
-- Perfect context recall (1.0) with 1000-char chunks showing that no information lost with this strategy
+- Faithfulness remains high (>0.94) across all configurations, confirming the effectiveness of the hallucination-prevention prompt design
+- Answer relevancy shows most variance with a maximum difference of 0.248
+- Perfect context recall (1.0) with 1000-char chunks showing that no information is lost
 
 ## Installation and Setup
 ### Prerequisites
@@ -126,7 +126,7 @@ Implemented production-ready RAG pipeline using LangChain Expression Language (L
    - Optionally, change the URL address of the PDF document
 6. **Run the API**
    ```bash
-   uvicorn api/main.py
+   uvicorn api.main:app --host 0.0.0.0 --port 8000
    ```
    Or just run the last cell in the fifth notebook
 

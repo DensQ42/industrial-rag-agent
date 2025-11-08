@@ -25,3 +25,4 @@ data/chromadb/**
 *.db-wal
 
 *_old.ipynb
+README_old.md

@@ -1,3 +1,4 @@
+from pathlib import Path
 import pandas as pd
 import os
 import chromadb
@@ -74,6 +75,8 @@ def setup_data_collection(
         - The Chroma database is stored persistently at `'../data/chromadb'`.
         - The vector space uses cosine similarity for nearest-neighbor search.
     """
+    BASE_DIR = Path(__file__).parent.parent
+
     embedding_function = HuggingFaceEmbeddings(
         model_name='sentence-transformers/all-MiniLM-L6-v2',
         model_kwargs={'device': device},
@@ -81,7 +84,7 @@ def setup_data_collection(
     )
 
     if overwrite:
-        chunks = pd.read_json(f'../data/processed/{chunks_filename}.json', orient='records')
+        chunks = pd.read_json(BASE_DIR / f'data/processed/{chunks_filename}.json', orient='records')
 
         documents: List[Document] = [
             Document(
@@ -98,7 +101,7 @@ def setup_data_collection(
         ]
 
         try:
-            client = chromadb.PersistentClient(path='../data/chromadb')
+            client = chromadb.PersistentClient(path=BASE_DIR / 'data/chromadb')
             client.delete_collection(collection_name)
         except Exception:
             pass
@@ -107,7 +110,7 @@ def setup_data_collection(
             documents=documents,
             embedding=embedding_function,
             collection_name=collection_name,
-            persist_directory='../data/chromadb',
+            persist_directory=BASE_DIR / 'data/chromadb',
             collection_metadata={'hnsw:space': 'cosine'},
         )
 
@@ -115,7 +118,7 @@ def setup_data_collection(
         vectorstore = Chroma(
             collection_name=collection_name,
             embedding_function=embedding_function,
-            persist_directory='../data/chromadb',
+            persist_directory=BASE_DIR / 'data/chromadb',
         )
 
     return vectorstore

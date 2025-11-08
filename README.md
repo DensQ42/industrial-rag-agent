@@ -54,9 +54,46 @@ INDUSTRIAL_RAG_AGENT/
 └── requirements-full.txt            # Dependencies for the entire project
 ```
 
+## Methodology
 
+### 1. Data Processing Pipeline (notebook 1)
+- Used PyMuPDF for text extraction from PDF document with metadata preservation
+- Split the extracted text into overlapping sentence-boundary-aware chunks
+- Established semantic vector representation using sentence transformer `all-MiniLM-L6-v2` model
+- Built vector database store with cosine similarity indexing using ChromaDB
 
+### 2. RAG Architecture: Manual Implementation (Notebook 2)
+- Create custom semantic search function using cosine similarity
+- Engineered prompt template with clear structured instruction of 8 steps
+- Integrated directly Anthropic Claude Haiku 4.5 model with temperature 0.3 via API for answer generating
 
+### 3. RAG Architecture: LangChain Implementation (Notebook 3)
+Implemented production-ready RAG pipeline using LangChain Expression Language (LCEL) chains with 3 main elements: modular retriever, prompt template and LLM (Haiku 4.5).
+
+### 4. Testing and Evaluation (Notebook 4)
+- Created custom dataset of 12 relevant and 3 irrelevant query-answer pairs regarding selected PDF document
+- Evaluated 3 chunking configurations (200, 500, 1000 chars) across 4 RAGAS metrics (answer relevancy, faithfulness, context precision and context recall) using Claude Sonnet 4.5 as evaluator with 0 value temperature
+- Analyzed results and applied the best chunking strategy with 1000 char size and 200 overlap
+
+### 5. Deployment (Notebook 5)
+- Deployed FastAPI-based REST API with comprehensive validation
+- Implemented Docker containerization for consistent deployment
+
+## Results
+
+### Configuration Comparison
+
+| Chunk Size | Overlap | Answer Relevancy | Faithfulness | Context Precision | Context Recall |
+|------------|---------|------------------|--------------|-------------------|----------------|
+| **1000**   | **200** | **0.690**        | **0.992**    | **0.674**         | **1.000**      |
+| 500        | 100     | 0.639            | 0.968        | 0.652             | 0.933          |
+| 200        | 50      | 0.442            | 0.943        | 0.650             | 0.900          |
+
+### Key Findings
+- Larger chunks consistently outperform smaller chunks across all metrics
+- Faithfulness remains high (>0.94) across all configurations, that confirms well designed hallucinating-prevent prompt instruction
+- Answer relevancy shows most variance with the largest difference of 0.248
+- Perfect context recall (1.0) with 1000-char chunks showing that no information lost with this strategy
 
 ## Installation and Setup
 ### Prerequisites
@@ -91,7 +128,7 @@ INDUSTRIAL_RAG_AGENT/
    ```bash
    uvicorn api/main.py
    ```
-   Or just run the last cell in fourth notebook
+   Or just run the last cell in the fifth notebook
 
 ### Option 2: Docker Deployment
 1. **Clone the repository**

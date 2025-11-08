@@ -154,7 +154,7 @@ The API will be available at:
 ### Endpoints
 - `GET /` - API information and available endpoints
 - `GET /health` - Service health check
-- `POST /analyze` - Main RAG pipeline endpoint
+- `POST /query` - Main RAG pipeline endpoint
 
 ### Example Usage
 **Query:**

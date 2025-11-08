@@ -1,7 +1,5 @@
-from pathlib import Path
 from datetime import datetime
-# import nest_asyncio
-import uvicorn, sys, torch
+import uvicorn, torch
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -14,9 +12,8 @@ warnings.filterwarnings('ignore', category=UserWarning)
 logging.getLogger('chromadb').setLevel(logging.WARNING)
 logging.getLogger('sentence_transformers').setLevel(logging.WARNING)
 
-sys.path.append('..')
 from src.langchain_RAG import setup_data_collection, langchain_rag_pipeline
-from models import QueryRequest, QueryResponse, HealthResponse
+from api.models import QueryRequest, QueryResponse, HealthResponse
 
 
 logging.basicConfig(level=logging.INFO)
